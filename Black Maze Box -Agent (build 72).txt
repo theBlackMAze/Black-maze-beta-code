@@ -1,0 +1,155 @@
+/*
+OK SO THIS IS THE BOX CODE FOR THE BLACK MAZE
+AGENT CODE
+SJ
+OCT 2015
+//
+PLAN
+THE IDEA IS TO 
+RECIEVE DATA FROM THE SERVER
+CHECK THE DATA AGAINST EXPECTED STATES DEVICE ON , OFF LIGHT COLOUR , TRIGGER DURATION, HOLD DURATION
+USE THIS INCOMING DATA TO CONFIGURE INITIAL STATES
+USE THE DATA AS TRIGGERS TO DENT DATA TO THE DEVICE
+//
+WE WILL ALSO BE RECIEVING DATA FROM THE DEVICE AND SENDING IT BACK TO THE SERVER
+THE RETURN DATA IS DEVICE HELD =TRUE OR FALSE, DEVICE (X) READY 
+
+*/
+
+const serverURL = "https://agent.electricimp.com/UfjeyOiM8dzT";//THE SERVER URL
+checkId <- false;
+loclId<-null;
+boxSendID <-null;
+//
+//box1Id <-"2313394cead3dbee";
+box2Id <-"235f813643fc42ee";
+box3Id <-"234c723643fc42ee";
+box4Id <-"23251a4cead3dbee";
+box5Id <-null;
+box1Id <-"230a603643fc42ee";
+box6Id <-"2333303643fc42ee";//house lights
+boxIDs <- [null, box1Id, box2Id, box3Id, box4Id, box5Id, box6Id];
+boxNum <- -1;
+
+boxNumState <- [null, "box1State", "box2State","box3State","box4State", "box5State", "box6State"];
+//
+boxState<-null//1= off, 2 = switched on by trigger state, 3 = held on at box
+//myId<- hardware.getdeviceid();
+// myDevId = imp.configparams.deviceid;
+
+//
+device.on("impSerialIn", function(char)
+{
+    // Construct the URL. 
+    //
+    boxState=char;
+    server.log("boxState = "+boxState);
+    server.log("boxSendID = "+boxSendID);
+     server.log("boxState = "+boxState);
+     
+     
+    
+    //
+    
+     local url = serverURL+"?"+boxSendID+"="+boxState;
+     local request = http.get(url);
+          request.sendsync();
+           
+           
+           
+  //server.log("we are sending this url "+serverURL+"?"boxSendID+"="+boxState);
+  //http.get(serverURL+"?"boxSendID+"="+boxState);
+  
+  
+  
+  //server.log("Local id fo this box is "+loclId)
+ // server.log("the Arduino says "+char);
+    
+   
+});
+
+//
+
+
+
+
+
+function testIncoming(request, response){
+   
+   try
+    {
+        // Check for "data" key.
+        if ("data" in request.query)
+        {
+            // If we see "data", send that value over to the imp.
+            // Label the data "dataToSerial" (data to serial output).
+            device.send("dataToSerial", request.query.data);
+            server.log("we are sending "+request.query.data)
+            stateChange(key, value);// not sure if we use this bit now....???
+            
+            //;
+            /*
+            foreach(key, value in request.query){
+   
+     
+                switch(key){
+                    case  "data":
+                    
+                     stateChange(key, value);
+                 }
+     
+            }
+            */
+            //;
+        }
+        // send a response back saying everything was OK.
+        response.send(200, "Box ID = "+boxNum);
+    }
+    catch (ex)  // In case of an error, produce an error code.
+    {
+        response.send(500, "Internal Server Error: " + ex);
+    }
+}
+function stateChange(k,v){
+    
+    if(k=="data"){
+        
+        if(v== "s"){
+            boxState=2;
+            //send state
+        }else if(v=="b"){
+          //  boxState=
+            // send state
+        }
+    }
+}
+//function 
+function setUp(){
+    
+     //local myDevId
+     loclId = imp.configparams.deviceid;//get the break out board id so we know which box is which
+     server.log("this box id == "+loclId);
+     if(loclId==box1Id){
+         
+     }
+    // loclId= myDevId;
+     boxState=0;
+     //checkId=true;
+     
+     for(local i=0 ; i<5 ; i++){
+      
+      if (boxIDs[i]==loclId){
+          boxSendID=boxNumState[i];
+          server.log("sending key = "+boxSendID);
+          boxNum=i;
+      }
+      
+      
+  }
+  
+}
+setUp();
+
+// register the HTTP handler
+http.onrequest(testIncoming);
+//
